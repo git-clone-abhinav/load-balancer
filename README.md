@@ -2,6 +2,9 @@
 
 This project implements an advanced HTTP load balancer in Go written according to a specific use case (randomized round-robin). The load balancer forwards incoming HTTP requests to a list of primary RPC (Remote Procedure Call) endpoints. If all primary endpoints fail, it falls back to a secondary list of RPC endpoints. Additionally, it includes a caching mechanism to temporarily avoid failed endpoints and a notification system to alert when all endpoints are down. 📡
 
+## Architecture 🏗️
+![IMAGE](architecture.jpg)
+
 ## Logic Overview 🧠
 
 1. **Initialization**:
@@ -35,8 +38,8 @@ This project implements an advanced HTTP load balancer in Go written according t
 
 1. **Clone the repository**:
    ```sh
-   git clone <>
-   cd loadbalancer
+   git clone https://github.com/Diffusion-Labs/load-balancer
+   cd load-balancer
    ```
 
 2. **Install dependencies**:
