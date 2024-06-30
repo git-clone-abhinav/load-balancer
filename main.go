@@ -29,9 +29,11 @@ var (
 )
 
 func init() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatalln("Error loading .env file: %v", err)
+		}
 	}
 
 	RPCs = strings.Split(os.Getenv("RPCs"), ",")
