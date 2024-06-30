@@ -34,43 +34,48 @@ This project implements an advanced HTTP load balancer in Go written according t
 6. **Slack Notification**:
    - Sends a notification to Slack when all RPC endpoints fail to `SLACK_WEBHOOK_URL`. 📩
 
-## Installation 🛠️
+## Docker  🐳
 
-1. **Clone the repository**:
-   ```sh
-   git clone https://github.com/Diffusion-Labs/load-balancer
-   cd load-balancer
+The `Dockerfile` is used to build a lightweight Docker image for the load balancer. It follows a multi-stage build process to minimize the final image size:
+
+1. **Builder Stage**:
+   - Uses the official Go image as the base image.
+   - Copies the source code into the image.
+   - Builds the Go binary for Linux using `go build`.
+
+2. **Runner Stage**:
+   - Uses the `scratch` image as the base, which is an empty image.
+   - Copies the compiled binary from the builder stage.
+   - Exposes the specified port.
+   - Sets the command to run the binary when the container starts.
+
+This multi-stage build process ensures that the final image only contains the compiled binary and its runtime dependencies, resulting in a highly optimized and small image size.
+
+## Docker Compose Setup 🐙
+
+The `docker-compose.yml` file is used to define and run the load balancer service using Docker Compose. It includes the following configuration:
+
+- **Service Definition**:
+  - Specifies the service name as `load-balancer`.
+  - Sets the build context and Dockerfile location.
+  - Assigns the image name as `loadbalancer`.
+
+- **Environment Variables**:
+  - Sets the `ENV` environment variable to `production`.
+  - Loads additional environment variables from the `.env` file.
+
+- **Port Mapping**:
+  - Maps the container port to the host port specified in the `PORT` environment variable.
+
+- **Restart Policy**:
+  - Configures the service to restart unless stopped manually.
+
+To start the load balancer using Docker Compose, run the following command:
+   
+   ```bash
+   docker-compose build
+   docker-compose up [-d]
    ```
-
-2. **Install dependencies**:
-   Ensure you have Go installed. Then, run:
-   ```sh
-   go mod tidy
-   ```
-
-3. **Set up environment variables**:
-   Create a `.env` file in the root directory with the following content:
-   ```env
-   RPCs="https://rpc1.example.com, https://rpc2.example.com"
-   FALLBACK_RPCs="https://rpc.mantle.xyz"
-   PORT=8080
-   SLACK_WEBHOOK_URL=""
-   ERROR_TIME_TO_LIVE_MINUTES=3
-   ```
-
-## Usage 🚀
-
-1. **Run the load balancer**:
-   ```sh
-   go run main.go
-   ```
-
-2. **Send HTTP requests**:
-   The load balancer listens on `http://localhost:<ENV:PORT>`. You can send HTTP requests to this address, and the load balancer will forward them to the configured RPC endpoints. 📡
-
-3. **Monitor logs**:
-   The application logs the status of each request and any errors encountered. Check the console output for real-time logs. 📋
-
 ## Example
 
 To test the load balancer, you can use `curl http://localhost:8080` to send an HTTP request to the load balancer. The load balancer will forward the request to the primary and fallback RPC endpoints based on the configuration. 🧪
