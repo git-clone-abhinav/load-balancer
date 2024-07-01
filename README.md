@@ -1,6 +1,6 @@
 # Load Balancer 🚀
 
-This project implements an advanced HTTP load balancer in Go written according to a specific use case (randomized round-robin). The load balancer forwards incoming HTTP requests to a list of primary RPC (Remote Procedure Call) endpoints. If all primary endpoints fail, it falls back to a secondary list of RPC endpoints. Additionally, it includes a caching mechanism to temporarily avoid failed endpoints and a notification system to alert when all endpoints are down. 📡
+This project implements an advanced HTTP load balancer in Go written according to a specific use case (randomized round-robin). The load balancer forwards incoming HTTP requests to a list of primary RPC (Remote Procedure Call) endpoints. If all primary endpoints fail, it falls back to a secondary list of RPC endpoints. Additionally, it includes a caching mechanism to temporarily avoid endpoints that return a "429 Too Many Requests" status and a notification system to alert when all endpoints are down. 📡
 
 ## Architecture 🏗️
 ![IMAGE](architecture.jpg)
@@ -13,7 +13,7 @@ This project implements an advanced HTTP load balancer in Go written according t
    - The application fails to start if no primary or fallback RPCs are provided. ❌
 
 2. **Main Function**:
-   - Initializes a cache to store failed URLs temporarily using an in-memory database. 🗃️
+   - Initializes a cache to store URLs that return a "429 Too Many Requests" status temporarily using an in-memory database. 🗃️
    - Starts an HTTP server that listens for incoming requests. 🌐
 
 3. **Load Balancer**:
@@ -24,11 +24,11 @@ This project implements an advanced HTTP load balancer in Go written according t
 4. **Request Forwarding**:
    - Shuffles the list of URLs to distribute the load. 🔀
    - Forwards the request to each URL until a successful response is received. ✅
-   - If a URL returns a "Too Many Requests" status, it is cached in a Two-Queue (2Q) in-memory database to avoid retrying it for a specified TTL (time-to-live). ⏳
+   - If a URL returns a "429 Too Many Requests" status, it is cached in a Two-Queue (2Q) in-memory database to avoid retrying it for a specified TTL (time-to-live). ⏳
 
 5. **Caching Mechanism**:
-   - Uses a Two-Queue (2Q) in-memory caching algorithm to store failed URLs. 🗄️
-   - The cache temporarily stores URLs that fail to respond or return a "Too Many Requests" status, preventing repeated attempts to the same failing endpoint. 🚫
+   - Uses a Two-Queue (2Q) in-memory caching algorithm to store URLs that return a "429 Too Many Requests" status. 🗄️
+   - The cache temporarily stores URLs that return a "429 Too Many Requests" status, preventing repeated attempts to the same endpoint that has reached its rate limit. 🚫
    - `ERROR_TIME_TO_LIVE_MINUTES` is the time-to-live (TTL) for each URL in the cache. ⏲️
 
 6. **Slack Notification**:
@@ -48,6 +48,17 @@ The `Dockerfile` is used to build a lightweight Docker image for the load balanc
    - Copies the compiled binary from the builder stage.
    - Exposes the specified port.
    - Sets the command to run the binary when the container starts.
+
+Example `.env` file:
+   
+```env
+ENV=production
+RPCs=http://rpc1.com,http://rpc2.com,http://rpc3.com
+FALLBACK_RPCs=http://fallback1.com,http://fallback2.com
+PORT=8080
+ERROR_TIME_TO_LIVE_MINUTES=5
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/
+```
 
 This multi-stage build process ensures that the final image only contains the compiled binary and its runtime dependencies, resulting in a highly optimized and small image size.
 

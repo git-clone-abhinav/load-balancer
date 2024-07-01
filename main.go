@@ -83,8 +83,9 @@ func main() {
 // loadBalancer handles incoming HTTP requests and attempts to forward them to primary or fallback RPCs.
 func loadBalancer(w http.ResponseWriter, r *http.Request) {
 	if !tryForwardRequests(w, r, RPCs) {
+		sendNotificationToSlack("WARNING : All RPCs are reaching their ratelimits.")
 		if !tryForwardRequests(w, r, FallbackRPC) {
-			sendNotificationToSlack("All RPCs are reaching their ratelimits.")
+			sendNotificationToSlack("FATAL : Even fallback RPCs are reaching their ratelimits.")
 			http.Error(w, "All RPCs are reaching their ratelimits.", http.StatusInternalServerError)
 		}
 	}
@@ -115,6 +116,7 @@ func tryForwardRequests(w http.ResponseWriter, r *http.Request, urls []string) b
 			}
 			w.WriteHeader(resp.StatusCode)
 			w.Write(body)
+			fmt.Println(resp.StatusCode, url)
 			return true
 		} else {
 			addToCacheWithTTL(url, cacheTTL)
